@@ -5,6 +5,7 @@ import re
 
 app = Flask(__name__)
 headers = {"Referer": "https://ntuplay.xyz/"}
+headers2 = {"Referer": "https://millionscast.com/"}
 
 def get_base_url(url):
     parsed_url = urlparse(url)
@@ -14,10 +15,10 @@ def get_base_url(url):
 
 @app.route("/")
 def credit():
-    return "(Daddy-API) Made With ❤️ — By Tahsin Ahmed Dipto"
+    return "(CricHD-API) Made With ðŸ’— By Sabbiriptv"
 
-@app.route("/daddy-stream/<string:channel_id>.m3u8")
-def handle_daddy-stream(channel_id):
+@app.route("/api/<string:channel_id>.m3u8")
+def handle_api(channel_id):
     
     source_code = requests.get(f"https://daddylivehd.sx/embed/stream-{channel_id}.php").text 
     regex = r"source:\s*['\"](.*?)['\"]"
@@ -28,20 +29,56 @@ def handle_daddy-stream(channel_id):
     response = requests.get(url, headers=headers)
     response_lines = response.text.splitlines()
     for index, line in enumerate(response_lines):
-        if ".m3u8" in line:
-            response_lines[index] = "/m3u8?id=" + line + f"&base={get_base_url(url)}"
+        if ".ts" in line:
+            response_lines[index] = "/ts?id=" + line + f"&base={get_base_url(url)}"
 
     response = make_response("\n".join(response_lines))
     response.headers["Content-Type"] = "application/vnd.apple.mpegurl"
     return response
 
-@app.route("/m3u8")
-def handle_m3u8():
+@app.route("/ts")
+def handle_ts():
     ts_id = request.args["id"]
     base = request.args["base"]
-    response = requests.get(base + m3u8_id, headers=headers)
+    response = requests.get(base + ts_id, headers=headers)
     myresponse = make_response(response.content)
     myresponse.headers["Content-Type"] = "video/mp2t"
+    return myresponse
+
+# ----------------
+
+@app.route("/api-v2/<string:channel_id>.m3u8")
+def handle_api2(channel_id):
+    
+    response = requests.get(f"https://millionscast.com/crichdwas.php?player=desktop&live={channel_id}", headers={"Referer": "https://stream.crichd.vip/"})
+
+    match_string = "return("
+    if "return(" not in response.text:
+        match_string = "return ("
+
+
+    first_index = response.text.find(match_string) + len(match_string)
+    last_index = response.text.find(".join")
+    link_array = eval(response.text[first_index:last_index])
+    joined = "".join(link_array)
+    final_link = joined.replace("\/\/\/\/", "//").replace("\/", "/")
+    response = requests.get(final_link, headers=headers2)
+    response_lines = response.text.splitlines()
+    for index, line in enumerate(response_lines):
+        if ".ts" in line:
+            response_lines[index] = "/ts-v2?id=" + line + "&base=" + get_base_url(final_link)
+    myresponse = make_response("\n".join(response_lines))
+    myresponse.headers["Content-Type"] = "application/vnd.apple.mpegurl"
+    return myresponse
+
+@app.route("/ts-v2")
+def handle_ts2():
+    ts_id = request.args.get("id")
+    base = request.args.get("base")
+    final = base + ts_id
+    response = requests.get(final)
+    myresponse = make_response(response.content)
+    myresponse.headers["Content-Type"] = "video/MP2T"
     return myresponse
 
 if __name__ == "__main__":
