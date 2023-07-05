@@ -15,9 +15,9 @@ def get_base_url(url):
 
 @app.route("/")
 def credit():
-    return "(CricHD-API) Made With ðŸ’— By Sabbiriptv"
+    return "(Daddy-API) Made With ðŸ’— By Sabbiriptv"
 
-@app.route("/api/<string:channel_id>.m3u8")
+@app.route("/api")
 def handle_api(channel_id):
     
     source_code = requests.get(f"https://daddylivehd.sx/embed/stream-{channel_id}.php").text 
@@ -47,7 +47,7 @@ def handle_ts():
 
 # ----------------
 
-@app.route("/api-v2/<string:channel_id>.m3u8")
+@app.route("/api-v2")
 def handle_api2(channel_id):
     
     response = requests.get(f"https://millionscast.com/crichdwas.php?player=desktop&live={channel_id}", headers={"Referer": "https://stream.crichd.vip/"})
